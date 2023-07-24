@@ -26,9 +26,37 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        const usersColl = client.db("campusExploreDb").collection("users");
         const universitiesColl = client.db("campusExploreDb").collection("universities");
         const reviewsColl = client.db("campusExploreDb").collection("reviews");
         const appliedColl = client.db("campusExploreDb").collection("appliedIn");
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersColl.insertOne(user);
+            res.send(result);
+        })
+
+        app.patch('/users/:email', async (req, res) => {
+            try {
+                const email = req.params.email;
+                const { name, address, university } = req.body;
+                const query = { email: email };
+                const updateProfile = {
+                    $set: {
+                        name: name,
+                        address: address,
+                        university: university
+                    },
+                };
+                const result = await usersColl.updateOne(query, updateProfile);
+                res.send(result);
+            } 
+            catch (error) {
+                res.status(500).send("Error updating user profile.");
+            }
+        });
+
 
         app.get('/universities', async (req, res) => {
             const result = await universitiesColl.find().toArray();
